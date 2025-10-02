@@ -1,0 +1,38 @@
+name: Основной запуск (7 воркеров)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        part: [3, 4, 5, 6, 7, 8, 9] # <-- Запускаем 7 воркеров с номерами от 3 до 9
+
+    steps:
+      - name: 1. Получение кода
+        uses: actions/checkout@v4
+
+      - name: 2. Установка Python и зависимостей
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - run: pip install -r requirements.txt
+
+      - name: 3. Подготовка файлов для воркера
+        run: |
+          mv ogrns_part_${{ matrix.part }}.txt ogrns.txt
+          mv api_keys_part_${{ matrix.part }}.txt APIs.txt
+
+      - name: 4. Запуск скрипта
+        run: python api_scraper.py
+
+      - name: 5. Сохранение результатов
+        uses: actions/upload-artifact@v4
+        with:
+          name: Результаты-Часть-${{ matrix.part }}
+          path: |
+            JSONs/
+            logs/
+            api_count.json
